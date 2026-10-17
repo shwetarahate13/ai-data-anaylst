@@ -1,9 +1,16 @@
 # Autonomous AI Data Analyst Agent
 
-An agent that **investigates** a business question the way a senior analyst would, instead of just answering it.
+[![CI](https://github.com/shwetarahate13/ai-data-anaylst/actions/workflows/ci.yml/badge.svg)](https://github.com/shwetarahate13/ai-data-anaylst/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![DuckDB](https://img.shields.io/badge/database-DuckDB-yellow.svg)](https://duckdb.org/)
+[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B.svg)](https://streamlit.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-```
-$ python -m analyst investigate "Why did revenue drop in Q3?"      # output abridged
+An enterprise-ready, multi-agent AI data analyst that **investigates** complex business questions end-to-end like a senior quantitative analyst, rather than just returning raw SQL queries.
+
+```bash
+$ python -m analyst investigate "Why did revenue drop in Q3?"
 
 Revenue fell 10.3% in Q3 2024 vs Q2 2024 ($1.11M to $997.1K, -$114.7K).
 - Where it came from: repeat customers in the West region moved -$149.8K, more than the entire net
@@ -17,126 +24,206 @@ Revenue fell 10.3% in Q3 2024 vs Q2 2024 ($1.11M to $997.1K, -$114.7K).
 - Confidence: high. 7 of 7 verification checks passed (re-derived from raw tables with independent SQL).
 ```
 
-Open `reports/sample-q3-investigation.html` for the full report with interactive charts.
+---
 
-## Design principle: the LLM never does arithmetic
+## 🌟 Core Design Principle: The LLM Never Does Arithmetic
 
-| Layer | Who | What |
+LLMs are prone to hallucinating numbers and mathematical errors. This system enforces strict separation of concerns:
+
+| Layer | Component | Functionality |
 |---|---|---|
-| Language | LLM (optional) | interpret the question, write SQL for ad-hoc questions, write the summary |
-| Numbers | SQL + pandas | every figure is computed by deterministic code |
-| Trust | Critic agent | re-derives the numbers from raw tables with *independently written* SQL, checks that segments add up, checks sample size and significance |
-| Guard rail | Narrator check | an LLM summary is **rejected** if it contains any number not present in the verified facts |
+| **Language** | Multi-Provider LLM (Anthropic / OpenAI / Ollama) | Interprets business questions, writes schema-grounded SQL, and narrates verified conclusions |
+| **Numbers** | DuckDB + Pandas | Every number, percentage, and metric delta is computed deterministically in code |
+| **Trust** | Critic Agent | Independently verifies every number from raw database tables using self-derived SQL; checks additivity, sample size, and statistical significance |
+| **Guardrail** | Grounding Checker | Any LLM summary containing numbers not present in the verified fact store is **automatically rejected** |
 
-It runs **fully offline with no API key** (rule-based planner / SQL / template narrator). With `ANTHROPIC_API_KEY` set,
-the Planner, text-to-SQL Coder and Narrator use Claude.
+Runs **100% offline with zero external API calls** using rule-based parsing and template narration. When configured with an API key, it unlocks intelligent text-to-SQL synthesis, self-repair loops, and narrative synthesis.
 
-## Architecture
+---
+
+## 🏗️ Multi-Agent Architecture
 
 ```mermaid
-flowchart LR
-  Q[Question] --> P[Planner<br/>metric, period, baseline, hypotheses]
-  P --> C[Coder<br/>SQL pulls / text-to-SQL + schema RAG]
-  C --> A[Analyst tools<br/>anomaly scan, driver attribution,<br/>mechanism scan, what-if]
-  A --> K[Critic<br/>independent raw-SQL verification]
-  K -- mismatch --> C
-  K --> N[Narrator<br/>grounded summary]
-  N --> R[Report: Markdown / HTML / UI / API]
+flowchart TD
+  Q["Business Question"] --> P["Planner Agent<br/>(Metrics, Period, Baseline, Hypotheses)"]
+  P --> C["Coder Agent<br/>(Text-to-SQL + Schema RAG + Self-Repair)"]
+  C --> A["Analyst Tools<br/>(Anomaly Scan, Driver Attribution, Mechanism, What-If)"]
+  A --> K["Critic Agent<br/>(Independent Raw-SQL Verification)"]
+  K -- "Mismatch Detected" --> C
+  K -- "Verified Facts" --> N["Narrator Agent<br/>(Grounded Synthesis)"]
+  N --> R["Output Interfaces<br/>(Streamlit UI / FastAPI REST / CLI / HTML Reports)"]
 ```
 
-| Component | File | Notes |
+### Module Breakdown
+
+| Component | File | Responsibilities |
 |---|---|---|
-| Planner | `analyst/agents.py` | rule parser; optionally refined by the LLM into validated JSON |
-| Coder | `analyst/agents.py`, `analyst/rules_sql.py` | schema RAG, draft, execute, **self-repair on SQL errors / empty results** (max 3), optional sandboxed pandas post-processing |
-| SQL gateway | `analyst/db.py` | single SELECT/WITH only, blocklist, DuckDB external access disabled and config locked |
-| Schema RAG | `analyst/schema_rag.py` | TF-IDF with light stemming over schema + `glossary.json` ("revenue", "churn", "active customer"...) |
-| Anomaly detection | `analyst/tools/anomaly.py` | seasonality-safe: scan statistic on year-over-year growth + Isolation Forest second opinion |
-| Root cause | `analyst/tools/drivers.py` | greedy drill-down with an *excess-concentration* test, volume/price split, difference-in-differences mechanism scan |
-| What-if | `analyst/tools/whatif.py` | two-way fixed-effects elasticity on a region x week panel, with CI and extrapolation flag |
-| Critic | `analyst/critic.py` | 7 checks, drives the confidence label |
-| Sandbox | `analyst/sandbox.py` | AST allow-list + isolated subprocess + rlimits + timeout |
-| Orchestrator | `analyst/agent.py` | the agent loop, with a recompute round if the Critic finds a mismatch |
+| **Planner** | `analyst/agents.py` | Deconstructs questions into metric targets, comparison periods, and hypotheses |
+| **Coder** | `analyst/agents.py`, `analyst/rules_sql.py` | Schema RAG, text-to-SQL generation, AST sandbox validation, and self-repair (up to 3 retries) |
+| **SQL Gateway** | `analyst/db.py` | Read-only gateway, blocked keywords/functions, external file access disabled, config locked |
+| **Schema RAG** | `analyst/schema_rag.py` | TF-IDF retrieval over database schemas and business glossary (`analyst/glossary.json`) |
+| **Anomaly Detection** | `analyst/tools/anomaly.py` | Scan statistic on year-over-year per-day growth + Isolation Forest second opinion (seasonality-safe) |
+| **Attribution** | `analyst/tools/drivers.py` | Greedy multi-dimensional drill-down with excess-concentration test and volume/price decomposition |
+| **What-If Simulation** | `analyst/tools/whatif.py` | Two-way fixed-effects panel elasticity model with confidence intervals and extrapolation guardrails |
+| **Critic** | `analyst/critic.py` | 7 automated verification checks driving high/medium/low confidence scores |
+| **Sandbox** | `analyst/sandbox.py` | Isolated subprocess with AST node whitelist, resource limits, and timeout protection |
+| **Orchestrator** | `analyst/agent.py` | End-to-end agent workflow coordinating Planner, Coder, Analyst, Critic, and Narrator |
 
-### Things worth knowing (and good to explain in an interview)
+---
 
-- **Seasonality is not an anomaly.** Detection runs on YoY growth of per-day values, so the Nov/Dec peak is ignored.
-  A scan statistic (best contiguous window vs the rest) finds the multi-month incident that single-month z-scores miss.
-- **"Big segment" is not "driver".** A segment only counts if it carries *more* of the movement than its share of the base
-  (`excess = (share_of_movement - share_of_base) / (1 - share_of_base)`). On the seasonal Q1 decline the agent correctly says
-  *broad-based* instead of blaming the largest segment.
-- **It abstains.** Asked why revenue dropped in Q4 2024 (it rose 49%), it says there is no drop to explain.
-- **Mechanism = difference-in-differences.** The metric change in the affected slice minus the change everywhere else,
-  standardised with a Welch-style standard error. Causation is never claimed.
+## ⚡ Quickstart
 
-## Quickstart (macOS / Linux)
+### 1. Installation
 
 ```bash
-cd ai-data-analyst-agent
-python3 -m venv .venv && source .venv/bin/activate
+# Clone the repository
+git clone https://github.com/shwetarahate13/ai-data-anaylst.git
+cd ai-data-anaylst
+
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-cp .env.example .env            # optional: add ANTHROPIC_API_KEY to enable LLM mode
+```
 
-python -m analyst investigate "Why did revenue drop in Q3?" --report --trace   # data is generated on first run
+### 2. Configure Environment (Optional)
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` to configure your preferred LLM provider:
+- **Offline Mode**: Leave keys blank (runs 100% offline with zero cost).
+- **Anthropic Claude**: Set `ANTHROPIC_API_KEY=sk-ant-...`
+- **OpenAI**: Set `OPENAI_API_KEY=sk-...` and `OPENAI_MODEL=gpt-4o-mini`
+- **Ollama (Local)**: Set `LLM_PROVIDER=ollama`, `OLLAMA_BASE_URL=http://localhost:11434/v1`, and `OLLAMA_MODEL=llama3.2`
+
+### 3. Run the Streamlit Web Application
+
+```bash
+streamlit run app/streamlit_app.py
+```
+Open [http://localhost:8501](http://localhost:8501) in your browser:
+- **Root-Cause Investigation**: Interactive waterfall bridges, timeline scans, and mechanism charts.
+- **Ask the Data**: Natural language text-to-SQL with auto-generated charts and CSV exports.
+- **What-If Simulation**: Scenario modeling for operational improvements with interactive sliders.
+- **Data Explorer & Ingestion**: Live database table schema browser and custom CSV file uploader.
+
+### 4. Run the REST API
+
+```bash
+uvicorn api.main:app --reload --port 8000
+```
+Interactive OpenAPI documentation is available at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+
+### 5. CLI Usage
+
+```bash
+# Run investigation with full trace and HTML report generation
+python -m analyst investigate "Why did revenue drop in Q3?" --report --trace
+
+# Ask ad-hoc SQL questions
 python -m analyst ask "Top 3 categories by revenue in Q3 2024"
-python -m analyst whatif --reduction 0.3 --region West
-streamlit run app/streamlit_app.py       # UI with charts, trace and verification panel
-uvicorn api.main:app --reload            # REST API, docs at http://127.0.0.1:8000/docs
-pytest -q                                # 46 tests
+
+# Run what-if scenario
+python -m analyst whatif --reduction 0.25 --region West
+
+# Inspect database tables and schemas
+python -m analyst tables
+python -m analyst tables --schema v_orders
+
+# Run custom validated SQL query
+python -m analyst query "SELECT region, COUNT(*) FROM v_orders GROUP BY 1"
 ```
 
-`make demo`, `make app`, `make api`, `make test`, `make eval` do the same.
+---
 
-## The demo dataset (with a known answer)
+## 🐳 Docker & Docker Compose
 
-`analyst/data_gen.py` simulates two years of e-commerce (68k orders, 14k customers, 120 products) and **injects a known cause**:
-from Jul to Sep 2024, deliveries to the **West** slowed by ~3.3 days and **repeat customers** there ordered ~65% less. Seasonality, growth
-and a small Fashion promo are included as red herrings. Ground truth is written to `data/ground_truth.json`, so the agent can be scored.
-To use your own data, load your tables into DuckDB and edit `VIEWS_SQL` in `analyst/db.py`, `knowledge.py` and `glossary.json`.
+Deploy the UI and API simultaneously with Docker Compose:
 
-## Evaluation
+```bash
+docker compose up --build
+```
+- **Streamlit Web UI**: [http://localhost:8501](http://localhost:8501)
+- **FastAPI REST API**: [http://localhost:8000](http://localhost:8000) (Swagger at `/docs`)
 
-`python -m eval.run_eval` (add `--offline` to force the baseline).
+---
 
-**Measured here, offline rule-based baseline (no LLM):**
+## 🧪 Testing and Evaluation
 
-| Benchmark | Result |
-|---|---|
-| Text-to-SQL execution accuracy, 50 questions | **39/50 = 78%** (easy 90%, medium 93%, hard 20%) |
-| Root-cause cases vs injected ground truth (6 positive, 2 negative controls) | **8/8** |
+Run the test suite (51 unit and integration tests):
+```bash
+pytest -v
+```
 
-**LLM mode:** not yet measured. Run `make eval` with your key and record it here:
+Run the benchmark evaluation (50 text-to-SQL questions + 8 root-cause cases):
+```bash
+python -m eval.run_eval --offline
+```
 
-| Mode | Text-to-SQL accuracy | easy / medium / hard |
+### Benchmark Results (Offline Baseline)
+
+| Benchmark | Accuracy | Notes |
 |---|---|---|
-| Rule-based baseline | 78% | 90% / 93% / 20% |
-| Claude (`ANALYST_MODEL`) | _fill in_ | _fill in_ |
+| **Text-to-SQL (50 questions)** | **78% (39/50)** | Easy: 90%, Medium: 93%, Hard: 20% (Offline rules) |
+| **Root-Cause Accuracy (8 cases)** | **100% (8/8)** | 6 injected ground-truth cases + 2 negative controls |
 
-Honest reading of these numbers: the root-cause score shows the pipeline is *correct on a case where the truth is known*; because I
-designed that dataset, it is not evidence of generalisation to arbitrary data. The 50 SQL questions use gold SQL written independently of
-the agent; the hard ones (ratios, multi-step CTEs, "both years") are where an LLM should beat the baseline.
+---
 
-## Limitations
-
-- LLM-mode code paths (planner refinement, text-to-SQL, narrator) are covered by tests with a scripted fake model, but were **not run against the live API during development**. Run `make eval` once with your key and check the trace.
-- Investigations pull order-level rows into pandas, which is fine for ~100k-1M rows; for a warehouse, push the aggregations into SQL.
-- Mechanism and what-if results are observational. The what-if elasticity comes from one regional slowdown episode, so treat the output as an estimate (the tool flags extrapolation).
-- The sandbox is defence in depth, not a security boundary. For untrusted use, run the app in a container with restricted network and filesystem.
-- Metrics supported by `investigate`: revenue and order count. Other metrics go through `ask`.
-
-## Project layout
+## 📁 Repository Structure
 
 ```
-analyst/        agents, orchestrator, critic, tools/ (anomaly, drivers, whatif), db, rag, sandbox, report, cli
-app/            Streamlit UI          api/   FastAPI service
-eval/           50-question set, root-cause cases, runner, saved results
-tests/          46 tests (SQL safety, sandbox, anomaly, root cause, critic tamper test, repair loop, grounding, API)
-reports/        sample HTML report    data/  generated on first run
+ai-data-analyst/
+├── analyst/                  # Core agent package
+│   ├── agent.py              # Orchestrator & Investigation coordinator
+│   ├── agents.py             # Planner, Coder, and Narrator agent implementations
+│   ├── bootstrap.py          # Data generation and database setup
+│   ├── cli.py                # Command-line interface
+│   ├── config.py             # Settings and environment loader
+│   ├── critic.py             # 7 independent verification checks
+│   ├── data_gen.py           # Synthetic e-commerce generator with injected ground truth
+│   ├── db.py                 # DuckDB secure SQL gateway & schema inspector
+│   ├── glossary.json         # Business metric definitions for schema RAG
+│   ├── knowledge.py          # Semantic documentation chunks
+│   ├── llm.py                # Multi-provider client (Anthropic, OpenAI, Ollama)
+│   ├── report.py             # HTML/Markdown generation and Plotly chart builders
+│   ├── rules_sql.py          # Rule-based fallback text-to-SQL parser
+│   ├── sandbox.py            # AST-validated Python sandbox with rlimits
+│   ├── schema_rag.py         # TF-IDF retrieval over schemas and glossary
+│   ├── utils.py              # Number formatting, date windows, Trace logger
+│   └── tools/                # Statistical & econometric toolset
+│       ├── anomaly.py        # Scan-statistic seasonality-safe anomaly detection
+│       ├── drivers.py        # Attribution drill-down, volume/price split, diff-in-diff
+│       └── whatif.py         # Two-way fixed effects panel regression
+├── api/                      # Production REST API
+│   └── main.py               # FastAPI application with CORS and endpoints
+├── app/                      # Interactive Web UI
+│   └── streamlit_app.py      # Streamlit app with tabs, charts, explorer, uploader
+├── data/                     # Data directory (shop.duckdb, ground_truth.json)
+├── eval/                     # Evaluation harness
+│   ├── questions.py          # 50 gold standard SQL evaluation questions
+│   └── run_eval.py           # Evaluation runner
+├── reports/                  # Generated HTML and Markdown investigation reports
+├── tests/                    # 51 unit & integration tests
+│   ├── conftest.py           # Shared fixtures & FakeLLM
+│   ├── test_agent.py         # Root cause, critic, and narration tests
+│   ├── test_ask.py           # Text-to-SQL, self-repair, and sandbox tests
+│   ├── test_core.py          # SQL security, sandbox limits, anomaly tests
+│   ├── test_interfaces.py    # FastAPI endpoints and report generation tests
+│   └── test_real_world.py    # OpenAI, multi-provider, table inspection, CSV upload tests
+├── .github/workflows/ci.yml  # Automated CI testing workflow
+├── Dockerfile                # Production container image
+├── docker-compose.yml        # Multi-container orchestration (UI + API)
+├── Makefile                  # Developer workflow commands
+├── requirements.txt          # Python package dependencies
+└── README.md                 # Project documentation
 ```
 
-## Resume / interview framing
+---
 
-> Built an autonomous analyst agent (multi-agent: planner, text-to-SQL coder with schema RAG, critic, narrator) that investigates
-> metric changes end to end: seasonality-aware anomaly detection, segment drill-down, difference-in-differences mechanism analysis and a
-> what-if elasticity model. A critic re-derives every number from raw tables and LLM summaries are rejected if they contain ungrounded
-> figures. Evaluated on a 50-question text-to-SQL set (baseline 78%, Claude: **__%**) and on injected-ground-truth root-cause cases
-> including negative controls.
+## 📄 License
+
+MIT License. See [LICENSE](LICENSE) for details.

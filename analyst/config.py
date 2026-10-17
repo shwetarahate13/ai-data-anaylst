@@ -28,8 +28,14 @@ class Settings:
     data_dir: Path = ROOT / "data"
     db_path: Path = ROOT / "data" / "shop.duckdb"
     reports_dir: Path = ROOT / "reports"
+    provider: str = os.getenv("LLM_PROVIDER", "").lower()
     model: str = os.getenv("ANALYST_MODEL", "claude-sonnet-5-5")
     api_key: str | None = os.getenv("ANTHROPIC_API_KEY") or None
+    openai_api_key: str | None = os.getenv("OPENAI_API_KEY") or None
+    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    openai_base_url: str = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3.2")
     max_sql_retries: int = 3
     row_limit: int = 5000
     currency: str = os.getenv("ANALYST_CURRENCY", "$")

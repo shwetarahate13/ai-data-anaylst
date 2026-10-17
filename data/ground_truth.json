@@ -1,0 +1,16 @@
+{
+  "shock_window": [
+    "2024-07-01",
+    "2024-09-30"
+  ],
+  "region": "West",
+  "customer_type": "repeat",
+  "mechanism": "delivery_days",
+  "delivery_delta_days": 3.3,
+  "repeat_keep_probability": 0.35,
+  "red_herrings": [
+    "Fashion price promo Aug 2024 (-8%)",
+    "seasonality",
+    "organic growth"
+  ]
+}

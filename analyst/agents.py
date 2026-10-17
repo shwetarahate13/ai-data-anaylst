@@ -203,7 +203,7 @@ class Coder:
         if sql is None:
             trace.log("Coder", "rule-based parser could not handle the question", note)
             return AskResult(question, None, None,
-                             "I can't answer that offline. Set ANTHROPIC_API_KEY to enable the LLM text-to-SQL agent.",
+                             "I can't answer that offline. Set ANTHROPIC_API_KEY (or OPENAI_API_KEY) to enable the LLM text-to-SQL agent.",
                              "none", trace=trace)
         trace.log("Coder", "generated SQL (rules)", note, sql)
         df = self.db.query(sql)

@@ -42,6 +42,13 @@ def main(argv: list[str] | None = None) -> int:
     w.add_argument("--reduction", type=float, default=0.20, help="fractional cut in delivery time (0.2 = 20%%)")
     w.add_argument("--region", default=None)
 
+    t = sub.add_parser("tables", help="list database tables and views")
+    t.add_argument("--schema", default=None, help="show schema for a specific table")
+
+    q = sub.add_parser("query", help="run a safe SQL query directly against the database")
+    q.add_argument("sql", help="SQL query to execute (SELECT or WITH only)")
+    q.add_argument("--limit", type=int, default=50, help="maximum rows to display")
+
     sub.add_parser("eval", help="run the evaluation harness (see eval/run_eval.py)")
 
     args = ap.parse_args(argv)
@@ -54,6 +61,35 @@ def main(argv: list[str] | None = None) -> int:
         return run_eval(["--offline"] if args.offline else [])
 
     agent = _agent(args)
+    if args.cmd == "tables":
+        if args.schema:
+            try:
+                cols = agent.db.table_schema(args.schema)
+                print(f"Schema for {args.schema}:")
+                for c in cols:
+                    print(f"  {c['column_name']:<20} {c['data_type']:<15} nullable={c['is_nullable']}")
+            except Exception as e:
+                print(f"Error fetching schema: {e}", file=sys.stderr)
+                return 1
+        else:
+            tbls = agent.db.list_tables()
+            print(f"{'Table Name':<25} {'Type':<15} {'Row Count':>12}")
+            print("-" * 55)
+            for tbl in tbls:
+                cnt_str = f"{tbl['row_count']:,}" if tbl['row_count'] is not None else "n/a"
+                print(f"{tbl['table_name']:<25} {tbl['table_type']:<15} {cnt_str:>12}")
+        return 0
+
+    if args.cmd == "query":
+        try:
+            df = agent.db.query(args.sql, limit=args.limit)
+            with pd.option_context("display.width", 140, "display.max_rows", args.limit):
+                print(df.to_string(index=False))
+            print(f"\n({len(df)} rows displayed{' - TRUNCATED' if df.attrs.get('truncated') else ''})")
+            return 0
+        except Exception as e:
+            print(f"SQL Error: {e}", file=sys.stderr)
+            return 1
     if args.cmd == "investigate":
         try:
             inv = agent.investigate(args.question)

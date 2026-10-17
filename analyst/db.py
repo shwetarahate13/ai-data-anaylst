@@ -149,3 +149,40 @@ class Database:
     def date_range(self) -> tuple[pd.Timestamp, pd.Timestamp]:
         lo, hi = self.con.execute("SELECT MIN(order_date), MAX(order_date) FROM orders").fetchone()
         return pd.Timestamp(lo), pd.Timestamp(hi)
+
+    def list_tables(self) -> list[dict]:
+        """List all tables and views with types and row counts."""
+        rows = self.con.execute(
+            "SELECT table_name, table_type FROM information_schema.tables "
+            "WHERE table_schema = 'main' ORDER BY table_type, table_name"
+        ).fetchall()
+        result = []
+        for name, ttype in rows:
+            try:
+                cnt = self.con.execute(f"SELECT COUNT(*) FROM {name}").fetchone()[0]
+            except Exception:
+                cnt = None
+            result.append({"table_name": name, "table_type": ttype, "row_count": cnt})
+        return result
+
+    def table_schema(self, table_name: str) -> list[dict]:
+        """Get column details (name, type, nullable) for a table or view."""
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table_name):
+            raise ValueError(f"Invalid table name: {table_name}")
+        rows = self.con.execute(
+            f"SELECT column_name, data_type, is_nullable FROM information_schema.columns "
+            f"WHERE table_name = '{table_name}' ORDER BY ordinal_position"
+        ).fetchall()
+        return [{"column_name": r[0], "data_type": r[1], "is_nullable": r[2]} for r in rows]
+
+    def sample_rows(self, table_name: str, limit: int = 10) -> pd.DataFrame:
+        """Fetch sample rows from a table or view."""
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table_name):
+            raise ValueError(f"Invalid table name: {table_name}")
+        return self.query(f"SELECT * FROM {table_name} LIMIT {limit}")
+
+    def register_dataframe(self, name: str, df: pd.DataFrame) -> None:
+        """Register an in-memory DataFrame as a queryable table."""
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+            raise ValueError(f"Invalid table name: {name}")
+        self.con.register(name, df)

@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    container_name: ai-data-analyst-ui
+    ports:
+      - "8501:8501"
+    env_file:
+      - path: .env
+        required: false
+    command: ["streamlit", "run", "app/streamlit_app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+    restart: unless-stopped
+
+  api:
+    build: .
+    container_name: ai-data-analyst-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    restart: unless-stopped

@@ -31,7 +31,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024",
         "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024",
         "error": null,
-        "seconds": 0.07
+        "seconds": 0.02
       },
       {
         "id": "q02",
@@ -41,7 +41,7 @@
         "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE year = 2023",
         "gold_sql": "SELECT COUNT(*) FROM orders WHERE EXTRACT(year FROM order_date) = 2023",
         "error": null,
-        "seconds": 0.07
+        "seconds": 0.01
       },
       {
         "id": "q03",
@@ -51,7 +51,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue) / COUNT(DISTINCT order_id), 2) AS aov FROM v_sales",
         "gold_sql": "SELECT ROUND(SUM(revenue)/COUNT(DISTINCT order_id),2) FROM v_sales",
         "error": null,
-        "seconds": 0.06
+        "seconds": 0.02
       },
       {
         "id": "q04",
@@ -61,7 +61,7 @@
         "agent_sql": "SELECT COUNT(DISTINCT customer_id) AS customers FROM v_orders",
         "gold_sql": "SELECT COUNT(*) FROM customers",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.01
       },
       {
         "id": "q05",
@@ -71,7 +71,7 @@
         "agent_sql": "SELECT ROUND(AVG(CASE WHEN status = 'cancelled' THEN 1.0 ELSE 0 END), 4) AS cancellation_rate FROM v_orders",
         "gold_sql": "SELECT ROUND(AVG(CASE WHEN status='cancelled' THEN 1.0 ELSE 0 END),4) FROM orders",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q06",
@@ -81,7 +81,7 @@
         "agent_sql": "SELECT ROUND(AVG(delivery_days), 2) AS avg_delivery_days FROM v_orders",
         "gold_sql": "SELECT ROUND(AVG(delivery_days),2) FROM orders",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q07",
@@ -91,7 +91,7 @@
         "agent_sql": "SELECT ROUND(AVG(rating), 2) AS avg_rating FROM v_orders",
         "gold_sql": "SELECT ROUND(AVG(rating),2) FROM reviews",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.01
       },
       {
         "id": "q08",
@@ -101,7 +101,7 @@
         "agent_sql": "SELECT SUM(quantity) AS units_sold FROM v_sales",
         "gold_sql": "SELECT SUM(quantity) FROM v_sales",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.02
       },
       {
         "id": "q09",
@@ -111,7 +111,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q3'",
         "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 AND quarter = 'Q3'",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q10",
@@ -121,7 +121,7 @@
         "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE status = 'cancelled'",
         "gold_sql": "SELECT COUNT(*) FROM orders WHERE status = 'cancelled'",
         "error": null,
-        "seconds": 0.03
+        "seconds": 0.01
       },
       {
         "id": "q11",
@@ -131,7 +131,7 @@
         "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY region ORDER BY revenue DESC",
         "gold_sql": "SELECT region, ROUND(SUM(revenue),2) FROM v_sales GROUP BY region",
         "error": null,
-        "seconds": 0.06
+        "seconds": 0.02
       },
       {
         "id": "q12",
@@ -141,7 +141,7 @@
         "agent_sql": "SELECT category, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY category ORDER BY revenue DESC",
         "gold_sql": "SELECT category, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 GROUP BY category",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.02
       },
       {
         "id": "q13",
@@ -151,7 +151,7 @@
         "agent_sql": "SELECT region, COUNT(*) AS orders FROM v_orders WHERE year = 2024 GROUP BY region ORDER BY orders DESC",
         "gold_sql": "SELECT c.region, COUNT(*) FROM orders o JOIN customers c USING (customer_id) WHERE EXTRACT(year FROM o.order_date) = 2024 GROUP BY c.region",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q14",
@@ -161,7 +161,7 @@
         "agent_sql": "SELECT region, ROUND(AVG(delivery_days), 2) AS avg_delivery_days FROM v_orders GROUP BY region ORDER BY avg_delivery_days DESC",
         "gold_sql": "SELECT c.region, ROUND(AVG(o.delivery_days),2) FROM orders o JOIN customers c USING (customer_id) GROUP BY c.region",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.01
       },
       {
         "id": "q15",
@@ -171,7 +171,7 @@
         "agent_sql": "SELECT month_start, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY month_start ORDER BY month_start",
         "gold_sql": "SELECT month_start, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 GROUP BY month_start",
         "error": null,
-        "seconds": 0.07
+        "seconds": 0.02
       },
       {
         "id": "q16",
@@ -181,7 +181,7 @@
         "agent_sql": "SELECT year, quarter, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY year, quarter ORDER BY year, quarter",
         "gold_sql": "SELECT year, quarter, ROUND(SUM(revenue),2) FROM v_sales GROUP BY year, quarter",
         "error": null,
-        "seconds": 0.06
+        "seconds": 0.02
       },
       {
         "id": "q17",
@@ -191,7 +191,7 @@
         "agent_sql": "SELECT status, COUNT(*) AS orders FROM v_orders GROUP BY status ORDER BY orders DESC",
         "gold_sql": "SELECT status, COUNT(*) FROM orders GROUP BY status",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.01
       },
       {
         "id": "q18",
@@ -201,7 +201,7 @@
         "agent_sql": "SELECT region, ROUND(AVG(rating), 2) AS avg_rating FROM v_orders GROUP BY region ORDER BY avg_rating DESC",
         "gold_sql": "SELECT c.region, ROUND(AVG(r.rating),2) FROM reviews r JOIN orders o USING (order_id) JOIN customers c USING (customer_id) GROUP BY c.region",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q19",
@@ -211,7 +211,7 @@
         "agent_sql": "SELECT customer_type, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY customer_type ORDER BY revenue DESC",
         "gold_sql": "SELECT customer_type, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 GROUP BY customer_type",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.02
       },
       {
         "id": "q20",
@@ -221,7 +221,7 @@
         "agent_sql": "SELECT region, ROUND(AVG(CASE WHEN status = 'cancelled' THEN 1.0 ELSE 0 END), 4) AS cancellation_rate FROM v_orders GROUP BY region ORDER BY cancellation_rate DESC",
         "gold_sql": "SELECT c.region, ROUND(AVG(CASE WHEN o.status='cancelled' THEN 1.0 ELSE 0 END),4) FROM orders o JOIN customers c USING (customer_id) GROUP BY c.region",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q21",
@@ -231,7 +231,7 @@
         "agent_sql": "SELECT category, SUM(quantity) AS units_sold FROM v_sales GROUP BY category ORDER BY units_sold DESC",
         "gold_sql": "SELECT category, SUM(quantity) FROM v_sales GROUP BY category",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.02
       },
       {
         "id": "q22",
@@ -241,7 +241,7 @@
         "agent_sql": "SELECT region, ROUND(SUM(revenue) / COUNT(DISTINCT order_id), 2) AS aov FROM v_sales WHERE year = 2024 GROUP BY region ORDER BY aov DESC",
         "gold_sql": "SELECT region, ROUND(SUM(revenue)/COUNT(DISTINCT order_id),2) FROM v_sales WHERE year = 2024 GROUP BY region",
         "error": null,
-        "seconds": 0.06
+        "seconds": 0.02
       },
       {
         "id": "q23",
@@ -251,7 +251,7 @@
         "agent_sql": "SELECT year, COUNT(DISTINCT customer_id) AS customers FROM v_orders GROUP BY year ORDER BY year",
         "gold_sql": "SELECT EXTRACT(year FROM order_date), COUNT(DISTINCT customer_id) FROM orders GROUP BY 1",
         "error": null,
-        "seconds": 0.07
+        "seconds": 0.01
       },
       {
         "id": "q24",
@@ -261,7 +261,7 @@
         "agent_sql": "SELECT year, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY year ORDER BY year",
         "gold_sql": "SELECT year, ROUND(SUM(revenue),2) FROM v_sales GROUP BY year",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.02
       },
       {
         "id": "q25",
@@ -271,7 +271,7 @@
         "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY region ORDER BY revenue DESC LIMIT 1",
         "gold_sql": "SELECT region FROM v_sales WHERE year = 2024 GROUP BY region ORDER BY SUM(revenue) DESC LIMIT 1",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.02
       },
       {
         "id": "q26",
@@ -281,7 +281,7 @@
         "agent_sql": "SELECT category, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY category ORDER BY revenue DESC LIMIT 3",
         "gold_sql": "SELECT category FROM v_sales GROUP BY category ORDER BY SUM(revenue) DESC LIMIT 3",
         "error": null,
-        "seconds": 0.07
+        "seconds": 0.02
       },
       {
         "id": "q27",
@@ -291,7 +291,7 @@
         "agent_sql": "SELECT month_start, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2023 GROUP BY month_start ORDER BY revenue ASC LIMIT 1",
         "gold_sql": "SELECT month_start FROM v_sales WHERE year = 2023 GROUP BY month_start ORDER BY SUM(revenue) ASC LIMIT 1",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.02
       },
       {
         "id": "q28",
@@ -301,7 +301,7 @@
         "agent_sql": "SELECT month_start, COUNT(*) AS orders FROM v_orders GROUP BY month_start ORDER BY orders DESC LIMIT 5",
         "gold_sql": "SELECT month_start FROM orders o JOIN v_orders USING (order_id) GROUP BY month_start ORDER BY COUNT(*) DESC LIMIT 5",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q29",
@@ -311,7 +311,7 @@
         "agent_sql": "SELECT category, SUM(quantity) AS units_sold FROM v_sales WHERE year = 2024 GROUP BY category ORDER BY units_sold DESC LIMIT 1",
         "gold_sql": "SELECT category FROM v_sales WHERE year = 2024 GROUP BY category ORDER BY SUM(quantity) DESC LIMIT 1",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q30",
@@ -331,7 +331,7 @@
         "agent_sql": "SELECT year, quarter, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY year, quarter ORDER BY revenue DESC LIMIT 1",
         "gold_sql": "SELECT year, quarter FROM v_sales GROUP BY year, quarter ORDER BY SUM(revenue) DESC LIMIT 1",
         "error": null,
-        "seconds": 0.06
+        "seconds": 0.02
       },
       {
         "id": "q32",
@@ -351,7 +351,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND region = 'West'",
         "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE region = 'West' AND year = 2024",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q34",
@@ -361,7 +361,7 @@
         "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE year = 2024 AND customer_type = 'repeat'",
         "gold_sql": "SELECT COUNT(*) FROM v_orders WHERE customer_type = 'repeat' AND year = 2024",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q35",
@@ -371,7 +371,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q2' AND category = 'Electronics'",
         "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE category = 'Electronics' AND year = 2024 AND quarter = 'Q2'",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.01
       },
       {
         "id": "q36",
@@ -381,7 +381,7 @@
         "agent_sql": "SELECT ROUND(AVG(delivery_days), 2) AS avg_delivery_days FROM v_orders WHERE year = 2024 AND quarter = 'Q3' AND region = 'West'",
         "gold_sql": "SELECT ROUND(AVG(delivery_days),2) FROM v_orders WHERE region = 'West' AND year = 2024 AND quarter = 'Q3'",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q37",
@@ -391,7 +391,7 @@
         "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE year = 2023 AND region = 'South' AND status = 'cancelled'",
         "gold_sql": "SELECT COUNT(*) FROM v_orders WHERE status = 'cancelled' AND region = 'South' AND year = 2023",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.01
       },
       {
         "id": "q38",
@@ -401,7 +401,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2023 AND customer_type = 'new'",
         "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE customer_type = 'new' AND year = 2023",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q39",
@@ -411,7 +411,7 @@
         "agent_sql": "SELECT ROUND(AVG(rating), 2) AS avg_rating FROM v_orders WHERE year = 2024 AND month = 7",
         "gold_sql": "SELECT ROUND(AVG(rating),2) FROM v_orders WHERE year = 2024 AND month = 7",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q40",
@@ -421,7 +421,7 @@
         "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE year = 2023 AND month = 12",
         "gold_sql": "SELECT COUNT(*) FROM orders WHERE order_date >= DATE '2023-12-01' AND order_date < DATE '2024-01-01'",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q41",
@@ -431,7 +431,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND customer_type = 'repeat'",
         "gold_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN customer_type='repeat' THEN revenue END) / SUM(revenue), 2) FROM v_sales WHERE year = 2024",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.02
       },
       {
         "id": "q42",
@@ -441,7 +441,7 @@
         "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q2' GROUP BY region ORDER BY revenue DESC LIMIT 1",
         "gold_sql": "WITH r AS (SELECT region, SUM(CASE WHEN quarter='Q3' THEN revenue ELSE 0 END) - SUM(CASE WHEN quarter='Q2' THEN revenue ELSE 0 END) AS d FROM v_sales WHERE year = 2024 GROUP BY region) SELECT region FROM r ORDER BY d ASC LIMIT 1",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.01
       },
       {
         "id": "q43",
@@ -451,7 +451,7 @@
         "agent_sql": "SELECT COUNT(DISTINCT customer_id) AS customers FROM v_orders WHERE year = 2023",
         "gold_sql": "SELECT COUNT(*) FROM (SELECT customer_id FROM orders GROUP BY customer_id HAVING MIN(EXTRACT(year FROM order_date)) = 2023 AND MAX(EXTRACT(year FROM order_date)) = 2024 AND COUNT(DISTINCT EXTRACT(year FROM order_date)) = 2)",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q44",
@@ -461,7 +461,7 @@
         "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders",
         "gold_sql": "SELECT ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT customer_id), 2) FROM orders",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q45",
@@ -471,7 +471,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2023",
         "gold_sql": "SELECT ROUND(100.0 * (SUM(CASE WHEN year=2024 THEN revenue END) / SUM(CASE WHEN year=2023 THEN revenue END) - 1), 2) FROM v_sales",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.02
       },
       {
         "id": "q46",
@@ -491,7 +491,7 @@
         "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q3' GROUP BY region ORDER BY revenue DESC",
         "gold_sql": "SELECT region, customer_type, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 AND quarter = 'Q3' GROUP BY region, customer_type",
         "error": null,
-        "seconds": 0.05
+        "seconds": 0.01
       },
       {
         "id": "q48",
@@ -501,7 +501,7 @@
         "agent_sql": "SELECT month_start, ROUND(AVG(delivery_days), 2) AS avg_delivery_days FROM v_orders WHERE year = 2024 GROUP BY month_start ORDER BY avg_delivery_days DESC LIMIT 1",
         "gold_sql": "SELECT month FROM v_orders WHERE year = 2024 GROUP BY month ORDER BY AVG(delivery_days) DESC LIMIT 1",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q49",
@@ -511,7 +511,7 @@
         "agent_sql": "SELECT ROUND(AVG(rating), 2) AS avg_rating FROM v_orders",
         "gold_sql": "SELECT COUNT(*) FROM reviews WHERE rating = 5",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       },
       {
         "id": "q50",
@@ -521,7 +521,7 @@
         "agent_sql": "SELECT ROUND(AVG(CASE WHEN status = 'cancelled' THEN 1.0 ELSE 0 END), 4) AS cancellation_rate FROM v_orders WHERE year = 2024 AND quarter = 'Q3' AND region = 'West'",
         "gold_sql": "SELECT ROUND(AVG(CASE WHEN status='cancelled' THEN 1.0 ELSE 0 END),4) FROM v_orders WHERE region = 'West' AND year = 2024 AND quarter = 'Q3'",
         "error": null,
-        "seconds": 0.04
+        "seconds": 0.01
       }
     ]
   },
