@@ -1,0 +1,575 @@
+{
+  "mode": "rules",
+  "model": null,
+  "sql": {
+    "correct": 39,
+    "total": 50,
+    "accuracy": 0.78,
+    "by_difficulty": {
+      "easy": {
+        "correct": 9,
+        "total": 10,
+        "accuracy": 0.9
+      },
+      "medium": {
+        "correct": 28,
+        "total": 30,
+        "accuracy": 0.9333333333333333
+      },
+      "hard": {
+        "correct": 2,
+        "total": 10,
+        "accuracy": 0.2
+      }
+    },
+    "rows": [
+      {
+        "id": "q01",
+        "difficulty": "easy",
+        "question": "What was the total revenue in 2024?",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024",
+        "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024",
+        "error": null,
+        "seconds": 0.07
+      },
+      {
+        "id": "q02",
+        "difficulty": "easy",
+        "question": "How many orders were placed in 2023?",
+        "correct": true,
+        "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE year = 2023",
+        "gold_sql": "SELECT COUNT(*) FROM orders WHERE EXTRACT(year FROM order_date) = 2023",
+        "error": null,
+        "seconds": 0.07
+      },
+      {
+        "id": "q03",
+        "difficulty": "easy",
+        "question": "What is the average order value overall?",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(SUM(revenue) / COUNT(DISTINCT order_id), 2) AS aov FROM v_sales",
+        "gold_sql": "SELECT ROUND(SUM(revenue)/COUNT(DISTINCT order_id),2) FROM v_sales",
+        "error": null,
+        "seconds": 0.06
+      },
+      {
+        "id": "q04",
+        "difficulty": "easy",
+        "question": "How many customers are registered?",
+        "correct": false,
+        "agent_sql": "SELECT COUNT(DISTINCT customer_id) AS customers FROM v_orders",
+        "gold_sql": "SELECT COUNT(*) FROM customers",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q05",
+        "difficulty": "easy",
+        "question": "What is the overall cancellation rate?",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(AVG(CASE WHEN status = 'cancelled' THEN 1.0 ELSE 0 END), 4) AS cancellation_rate FROM v_orders",
+        "gold_sql": "SELECT ROUND(AVG(CASE WHEN status='cancelled' THEN 1.0 ELSE 0 END),4) FROM orders",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q06",
+        "difficulty": "easy",
+        "question": "What is the average delivery time in days?",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(AVG(delivery_days), 2) AS avg_delivery_days FROM v_orders",
+        "gold_sql": "SELECT ROUND(AVG(delivery_days),2) FROM orders",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q07",
+        "difficulty": "easy",
+        "question": "What is the average customer rating?",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(AVG(rating), 2) AS avg_rating FROM v_orders",
+        "gold_sql": "SELECT ROUND(AVG(rating),2) FROM reviews",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q08",
+        "difficulty": "easy",
+        "question": "How many units were sold in total?",
+        "correct": true,
+        "agent_sql": "SELECT SUM(quantity) AS units_sold FROM v_sales",
+        "gold_sql": "SELECT SUM(quantity) FROM v_sales",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q09",
+        "difficulty": "easy",
+        "question": "What was total revenue in Q3 2024?",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q3'",
+        "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 AND quarter = 'Q3'",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q10",
+        "difficulty": "easy",
+        "question": "How many orders were cancelled?",
+        "correct": true,
+        "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE status = 'cancelled'",
+        "gold_sql": "SELECT COUNT(*) FROM orders WHERE status = 'cancelled'",
+        "error": null,
+        "seconds": 0.03
+      },
+      {
+        "id": "q11",
+        "difficulty": "medium",
+        "question": "Revenue by region",
+        "correct": true,
+        "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY region ORDER BY revenue DESC",
+        "gold_sql": "SELECT region, ROUND(SUM(revenue),2) FROM v_sales GROUP BY region",
+        "error": null,
+        "seconds": 0.06
+      },
+      {
+        "id": "q12",
+        "difficulty": "medium",
+        "question": "Revenue by category in 2024",
+        "correct": true,
+        "agent_sql": "SELECT category, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY category ORDER BY revenue DESC",
+        "gold_sql": "SELECT category, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 GROUP BY category",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q13",
+        "difficulty": "medium",
+        "question": "Number of orders by region in 2024",
+        "correct": true,
+        "agent_sql": "SELECT region, COUNT(*) AS orders FROM v_orders WHERE year = 2024 GROUP BY region ORDER BY orders DESC",
+        "gold_sql": "SELECT c.region, COUNT(*) FROM orders o JOIN customers c USING (customer_id) WHERE EXTRACT(year FROM o.order_date) = 2024 GROUP BY c.region",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q14",
+        "difficulty": "medium",
+        "question": "Average delivery time by region",
+        "correct": true,
+        "agent_sql": "SELECT region, ROUND(AVG(delivery_days), 2) AS avg_delivery_days FROM v_orders GROUP BY region ORDER BY avg_delivery_days DESC",
+        "gold_sql": "SELECT c.region, ROUND(AVG(o.delivery_days),2) FROM orders o JOIN customers c USING (customer_id) GROUP BY c.region",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q15",
+        "difficulty": "medium",
+        "question": "Monthly revenue for 2024",
+        "correct": true,
+        "agent_sql": "SELECT month_start, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY month_start ORDER BY month_start",
+        "gold_sql": "SELECT month_start, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 GROUP BY month_start",
+        "error": null,
+        "seconds": 0.07
+      },
+      {
+        "id": "q16",
+        "difficulty": "medium",
+        "question": "Revenue by quarter",
+        "correct": true,
+        "agent_sql": "SELECT year, quarter, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY year, quarter ORDER BY year, quarter",
+        "gold_sql": "SELECT year, quarter, ROUND(SUM(revenue),2) FROM v_sales GROUP BY year, quarter",
+        "error": null,
+        "seconds": 0.06
+      },
+      {
+        "id": "q17",
+        "difficulty": "medium",
+        "question": "Number of orders by status",
+        "correct": true,
+        "agent_sql": "SELECT status, COUNT(*) AS orders FROM v_orders GROUP BY status ORDER BY orders DESC",
+        "gold_sql": "SELECT status, COUNT(*) FROM orders GROUP BY status",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q18",
+        "difficulty": "medium",
+        "question": "Average rating by region",
+        "correct": true,
+        "agent_sql": "SELECT region, ROUND(AVG(rating), 2) AS avg_rating FROM v_orders GROUP BY region ORDER BY avg_rating DESC",
+        "gold_sql": "SELECT c.region, ROUND(AVG(r.rating),2) FROM reviews r JOIN orders o USING (order_id) JOIN customers c USING (customer_id) GROUP BY c.region",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q19",
+        "difficulty": "medium",
+        "question": "Revenue by customer type in 2024",
+        "correct": true,
+        "agent_sql": "SELECT customer_type, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY customer_type ORDER BY revenue DESC",
+        "gold_sql": "SELECT customer_type, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 GROUP BY customer_type",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q20",
+        "difficulty": "medium",
+        "question": "Cancellation rate by region",
+        "correct": true,
+        "agent_sql": "SELECT region, ROUND(AVG(CASE WHEN status = 'cancelled' THEN 1.0 ELSE 0 END), 4) AS cancellation_rate FROM v_orders GROUP BY region ORDER BY cancellation_rate DESC",
+        "gold_sql": "SELECT c.region, ROUND(AVG(CASE WHEN o.status='cancelled' THEN 1.0 ELSE 0 END),4) FROM orders o JOIN customers c USING (customer_id) GROUP BY c.region",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q21",
+        "difficulty": "medium",
+        "question": "Units sold by category",
+        "correct": true,
+        "agent_sql": "SELECT category, SUM(quantity) AS units_sold FROM v_sales GROUP BY category ORDER BY units_sold DESC",
+        "gold_sql": "SELECT category, SUM(quantity) FROM v_sales GROUP BY category",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q22",
+        "difficulty": "medium",
+        "question": "Average order value by region in 2024",
+        "correct": true,
+        "agent_sql": "SELECT region, ROUND(SUM(revenue) / COUNT(DISTINCT order_id), 2) AS aov FROM v_sales WHERE year = 2024 GROUP BY region ORDER BY aov DESC",
+        "gold_sql": "SELECT region, ROUND(SUM(revenue)/COUNT(DISTINCT order_id),2) FROM v_sales WHERE year = 2024 GROUP BY region",
+        "error": null,
+        "seconds": 0.06
+      },
+      {
+        "id": "q23",
+        "difficulty": "medium",
+        "question": "How many customers placed orders in each year?",
+        "correct": true,
+        "agent_sql": "SELECT year, COUNT(DISTINCT customer_id) AS customers FROM v_orders GROUP BY year ORDER BY year",
+        "gold_sql": "SELECT EXTRACT(year FROM order_date), COUNT(DISTINCT customer_id) FROM orders GROUP BY 1",
+        "error": null,
+        "seconds": 0.07
+      },
+      {
+        "id": "q24",
+        "difficulty": "medium",
+        "question": "Yearly revenue",
+        "correct": true,
+        "agent_sql": "SELECT year, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY year ORDER BY year",
+        "gold_sql": "SELECT year, ROUND(SUM(revenue),2) FROM v_sales GROUP BY year",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q25",
+        "difficulty": "medium",
+        "question": "Which region had the highest revenue in 2024?",
+        "correct": true,
+        "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY region ORDER BY revenue DESC LIMIT 1",
+        "gold_sql": "SELECT region FROM v_sales WHERE year = 2024 GROUP BY region ORDER BY SUM(revenue) DESC LIMIT 1",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q26",
+        "difficulty": "medium",
+        "question": "Top 3 categories by revenue",
+        "correct": true,
+        "agent_sql": "SELECT category, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY category ORDER BY revenue DESC LIMIT 3",
+        "gold_sql": "SELECT category FROM v_sales GROUP BY category ORDER BY SUM(revenue) DESC LIMIT 3",
+        "error": null,
+        "seconds": 0.07
+      },
+      {
+        "id": "q27",
+        "difficulty": "medium",
+        "question": "Which month had the lowest revenue in 2023?",
+        "correct": true,
+        "agent_sql": "SELECT month_start, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2023 GROUP BY month_start ORDER BY revenue ASC LIMIT 1",
+        "gold_sql": "SELECT month_start FROM v_sales WHERE year = 2023 GROUP BY month_start ORDER BY SUM(revenue) ASC LIMIT 1",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q28",
+        "difficulty": "medium",
+        "question": "Top 5 months by number of orders",
+        "correct": true,
+        "agent_sql": "SELECT month_start, COUNT(*) AS orders FROM v_orders GROUP BY month_start ORDER BY orders DESC LIMIT 5",
+        "gold_sql": "SELECT month_start FROM orders o JOIN v_orders USING (order_id) GROUP BY month_start ORDER BY COUNT(*) DESC LIMIT 5",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q29",
+        "difficulty": "medium",
+        "question": "Which category sold the most units in 2024?",
+        "correct": true,
+        "agent_sql": "SELECT category, SUM(quantity) AS units_sold FROM v_sales WHERE year = 2024 GROUP BY category ORDER BY units_sold DESC LIMIT 1",
+        "gold_sql": "SELECT category FROM v_sales WHERE year = 2024 GROUP BY category ORDER BY SUM(quantity) DESC LIMIT 1",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q30",
+        "difficulty": "medium",
+        "question": "Which region has the slowest average delivery?",
+        "correct": false,
+        "agent_sql": null,
+        "gold_sql": "SELECT c.region FROM orders o JOIN customers c USING (customer_id) GROUP BY c.region ORDER BY AVG(o.delivery_days) DESC LIMIT 1",
+        "error": null,
+        "seconds": 0.0
+      },
+      {
+        "id": "q31",
+        "difficulty": "medium",
+        "question": "Which quarter had the highest revenue?",
+        "correct": true,
+        "agent_sql": "SELECT year, quarter, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY year, quarter ORDER BY revenue DESC LIMIT 1",
+        "gold_sql": "SELECT year, quarter FROM v_sales GROUP BY year, quarter ORDER BY SUM(revenue) DESC LIMIT 1",
+        "error": null,
+        "seconds": 0.06
+      },
+      {
+        "id": "q32",
+        "difficulty": "medium",
+        "question": "Best selling product category in Q4 2023",
+        "correct": false,
+        "agent_sql": null,
+        "gold_sql": "SELECT category FROM v_sales WHERE year = 2023 AND quarter = 'Q4' GROUP BY category ORDER BY SUM(revenue) DESC LIMIT 1",
+        "error": null,
+        "seconds": 0.0
+      },
+      {
+        "id": "q33",
+        "difficulty": "medium",
+        "question": "Revenue from the West region in 2024",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND region = 'West'",
+        "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE region = 'West' AND year = 2024",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q34",
+        "difficulty": "medium",
+        "question": "How many orders did repeat customers place in 2024?",
+        "correct": true,
+        "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE year = 2024 AND customer_type = 'repeat'",
+        "gold_sql": "SELECT COUNT(*) FROM v_orders WHERE customer_type = 'repeat' AND year = 2024",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q35",
+        "difficulty": "medium",
+        "question": "Electronics revenue in Q2 2024",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q2' AND category = 'Electronics'",
+        "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE category = 'Electronics' AND year = 2024 AND quarter = 'Q2'",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q36",
+        "difficulty": "medium",
+        "question": "Average delivery time in the West region during Q3 2024",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(AVG(delivery_days), 2) AS avg_delivery_days FROM v_orders WHERE year = 2024 AND quarter = 'Q3' AND region = 'West'",
+        "gold_sql": "SELECT ROUND(AVG(delivery_days),2) FROM v_orders WHERE region = 'West' AND year = 2024 AND quarter = 'Q3'",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q37",
+        "difficulty": "medium",
+        "question": "Number of cancelled orders in the South region in 2023",
+        "correct": true,
+        "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE year = 2023 AND region = 'South' AND status = 'cancelled'",
+        "gold_sql": "SELECT COUNT(*) FROM v_orders WHERE status = 'cancelled' AND region = 'South' AND year = 2023",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q38",
+        "difficulty": "medium",
+        "question": "Revenue from new customers in 2023",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2023 AND customer_type = 'new'",
+        "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE customer_type = 'new' AND year = 2023",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q39",
+        "difficulty": "medium",
+        "question": "Average rating for orders in July 2024",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(AVG(rating), 2) AS avg_rating FROM v_orders WHERE year = 2024 AND month = 7",
+        "gold_sql": "SELECT ROUND(AVG(rating),2) FROM v_orders WHERE year = 2024 AND month = 7",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q40",
+        "difficulty": "medium",
+        "question": "How many orders were placed in December 2023?",
+        "correct": true,
+        "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders WHERE year = 2023 AND month = 12",
+        "gold_sql": "SELECT COUNT(*) FROM orders WHERE order_date >= DATE '2023-12-01' AND order_date < DATE '2024-01-01'",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q41",
+        "difficulty": "hard",
+        "question": "What percentage of 2024 revenue came from repeat customers?",
+        "correct": false,
+        "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND customer_type = 'repeat'",
+        "gold_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN customer_type='repeat' THEN revenue END) / SUM(revenue), 2) FROM v_sales WHERE year = 2024",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q42",
+        "difficulty": "hard",
+        "question": "Which region had the biggest revenue decline from Q2 2024 to Q3 2024?",
+        "correct": true,
+        "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q2' GROUP BY region ORDER BY revenue DESC LIMIT 1",
+        "gold_sql": "WITH r AS (SELECT region, SUM(CASE WHEN quarter='Q3' THEN revenue ELSE 0 END) - SUM(CASE WHEN quarter='Q2' THEN revenue ELSE 0 END) AS d FROM v_sales WHERE year = 2024 GROUP BY region) SELECT region FROM r ORDER BY d ASC LIMIT 1",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q43",
+        "difficulty": "hard",
+        "question": "How many customers ordered in both 2023 and 2024?",
+        "correct": false,
+        "agent_sql": "SELECT COUNT(DISTINCT customer_id) AS customers FROM v_orders WHERE year = 2023",
+        "gold_sql": "SELECT COUNT(*) FROM (SELECT customer_id FROM orders GROUP BY customer_id HAVING MIN(EXTRACT(year FROM order_date)) = 2023 AND MAX(EXTRACT(year FROM order_date)) = 2024 AND COUNT(DISTINCT EXTRACT(year FROM order_date)) = 2)",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q44",
+        "difficulty": "hard",
+        "question": "What is the average number of orders per customer who ordered?",
+        "correct": false,
+        "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders",
+        "gold_sql": "SELECT ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT customer_id), 2) FROM orders",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q45",
+        "difficulty": "hard",
+        "question": "Revenue growth from 2023 to 2024 in percent",
+        "correct": false,
+        "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2023",
+        "gold_sql": "SELECT ROUND(100.0 * (SUM(CASE WHEN year=2024 THEN revenue END) / SUM(CASE WHEN year=2023 THEN revenue END) - 1), 2) FROM v_sales",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q46",
+        "difficulty": "hard",
+        "question": "Which category has the highest average unit price?",
+        "correct": false,
+        "agent_sql": null,
+        "gold_sql": "SELECT category FROM v_sales GROUP BY category ORDER BY AVG(unit_price) DESC LIMIT 1",
+        "error": null,
+        "seconds": 0.0
+      },
+      {
+        "id": "q47",
+        "difficulty": "hard",
+        "question": "Revenue by region and customer type for Q3 2024",
+        "correct": false,
+        "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q3' GROUP BY region ORDER BY revenue DESC",
+        "gold_sql": "SELECT region, customer_type, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 AND quarter = 'Q3' GROUP BY region, customer_type",
+        "error": null,
+        "seconds": 0.05
+      },
+      {
+        "id": "q48",
+        "difficulty": "hard",
+        "question": "In which month of 2024 was the average delivery time the longest?",
+        "correct": false,
+        "agent_sql": "SELECT month_start, ROUND(AVG(delivery_days), 2) AS avg_delivery_days FROM v_orders WHERE year = 2024 GROUP BY month_start ORDER BY avg_delivery_days DESC LIMIT 1",
+        "gold_sql": "SELECT month FROM v_orders WHERE year = 2024 GROUP BY month ORDER BY AVG(delivery_days) DESC LIMIT 1",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q49",
+        "difficulty": "hard",
+        "question": "How many orders had a 5 star rating?",
+        "correct": false,
+        "agent_sql": "SELECT ROUND(AVG(rating), 2) AS avg_rating FROM v_orders",
+        "gold_sql": "SELECT COUNT(*) FROM reviews WHERE rating = 5",
+        "error": null,
+        "seconds": 0.04
+      },
+      {
+        "id": "q50",
+        "difficulty": "hard",
+        "question": "What share of orders were cancelled in the West region in Q3 2024?",
+        "correct": true,
+        "agent_sql": "SELECT ROUND(AVG(CASE WHEN status = 'cancelled' THEN 1.0 ELSE 0 END), 4) AS cancellation_rate FROM v_orders WHERE year = 2024 AND quarter = 'Q3' AND region = 'West'",
+        "gold_sql": "SELECT ROUND(AVG(CASE WHEN status='cancelled' THEN 1.0 ELSE 0 END),4) FROM v_orders WHERE region = 'West' AND year = 2024 AND quarter = 'Q3'",
+        "error": null,
+        "seconds": 0.04
+      }
+    ]
+  },
+  "rca": {
+    "correct": 8,
+    "total": 8,
+    "accuracy": 1.0,
+    "rows": [
+      {
+        "question": "Why did revenue drop in Q3?",
+        "correct": true,
+        "notes": []
+      },
+      {
+        "question": "What caused the decline in sales in the third quarter of 2024?",
+        "correct": true,
+        "notes": []
+      },
+      {
+        "question": "Revenue fell in Q3 2024 - explain why",
+        "correct": true,
+        "notes": []
+      },
+      {
+        "question": "Why did sales decrease in Q3 2024?",
+        "correct": true,
+        "notes": []
+      },
+      {
+        "question": "Why did revenue drop recently?",
+        "correct": true,
+        "notes": []
+      },
+      {
+        "question": "Why did orders drop in Q3 2024 compared to last year?",
+        "correct": true,
+        "notes": []
+      },
+      {
+        "question": "Why did revenue drop in Q4 2024?",
+        "correct": true,
+        "notes": []
+      },
+      {
+        "question": "Why did revenue fall in Q1 2024?",
+        "correct": true,
+        "notes": []
+      }
+    ]
+  }
+}

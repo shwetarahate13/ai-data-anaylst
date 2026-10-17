@@ -1,0 +1,19 @@
+{
+  "revenue": "Money from delivered orders only: SUM(quantity * unit_price) over order items whose order status is 'delivered'. Cancelled and returned orders are excluded. In v_sales this is SUM(revenue).",
+  "orders": "All orders placed, any status (cancelled and returned included). Use v_orders. 'delivered orders' means status = 'delivered'.",
+  "average order value": "AOV = revenue / number of delivered orders = SUM(revenue) / COUNT(DISTINCT order_id) on v_sales.",
+  "aov": "AOV = revenue / number of delivered orders = SUM(revenue) / COUNT(DISTINCT order_id) on v_sales.",
+  "active customer": "A customer with at least one order in the period being discussed (COUNT(DISTINCT customer_id) on v_orders filtered to that period).",
+  "new customer": "An order is a 'new' customer order when it is that customer's first order ever (customer_type = 'new' in the views).",
+  "repeat customer": "An order is a 'repeat' customer order when the customer has ordered before (customer_type = 'repeat').",
+  "churn": "A customer who was active in the previous period but placed no orders in the current period.",
+  "delivery time": "delivery_days = days between order and delivery. Only exists for delivered and returned orders; cancelled orders have NULL. Average with AVG(delivery_days) on v_orders.",
+  "cancellation rate": "Share of placed orders with status = 'cancelled': AVG(CASE WHEN status = 'cancelled' THEN 1.0 ELSE 0 END) on v_orders.",
+  "rating": "Customer review score from 1 to 5 (about 70% of delivered orders have one). AVG(rating) on v_orders ignores orders without a review.",
+  "units sold": "Total quantity of items on delivered orders: SUM(quantity) on v_sales.",
+  "quarter": "Calendar quarters: Q1 = Jan-Mar, Q2 = Apr-Jun, Q3 = Jul-Sep, Q4 = Oct-Dec. Views expose year and quarter ('Q1'..'Q4').",
+  "region": "Customer region: North, South, East, West or Central, taken from the customer's profile.",
+  "category": "Product category: Electronics, Home & Kitchen, Fashion, Beauty, Sports, Books, Toys. Only available on v_sales (item level).",
+  "basket size": "Number of line items on an order, bucketed as '1 item', '2 items', '3+ items'.",
+  "signup cohort": "Calendar year in which the customer registered (text, e.g. '2023')."
+}
