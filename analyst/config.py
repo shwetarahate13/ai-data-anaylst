@@ -25,9 +25,9 @@ _load_dotenv()
 
 @dataclass(frozen=True)
 class Settings:
-    data_dir: Path = ROOT / "data"
-    db_path: Path = ROOT / "data" / "shop.duckdb"
-    reports_dir: Path = ROOT / "reports"
+    data_dir: Path = Path(os.getenv("ANALYST_DATA_DIR", ROOT / "data"))
+    db_path: Path = Path(os.getenv("ANALYST_DB_PATH", ROOT / "data" / "shop.duckdb"))
+    reports_dir: Path = Path(os.getenv("ANALYST_REPORTS_DIR", ROOT / "reports"))
     provider: str = os.getenv("LLM_PROVIDER", "").lower()
     model: str = os.getenv("ANALYST_MODEL", "claude-sonnet-5-5")
     api_key: str | None = os.getenv("ANTHROPIC_API_KEY") or None
