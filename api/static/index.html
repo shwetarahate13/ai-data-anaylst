@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous AI Data Analyst</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#eff6ff', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+            dark: { 800: '#18181b', 850: '#121215', 900: '#09090b', border: '#27272a' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .glass-card { background: rgba(24, 24, 27, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  </style>
+</head>
+<body class="bg-[#09090b] text-zinc-100 min-h-screen flex flex-col">
+
+  <!-- Top Navbar -->
+  <header class="border-b border-zinc-800 bg-[#121215]/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">
+          ⚡
+        </div>
+        <div>
+          <h1 class="text-base font-semibold tracking-tight text-white flex items-center gap-2">
+            AI Data Analyst <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">Enterprise Agent</span>
+          </h1>
+          <p id="agent-mode-badge" class="text-xs text-zinc-400">Loading agent status...</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button onclick="openTableDrawer()" class="px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 text-xs font-medium transition flex items-center gap-1.5">
+          <i data-lucide="database" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span>Database & Tables</span>
+        </button>
+        <button onclick="openSettingsModal()" class="px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 text-xs font-medium transition flex items-center gap-1.5">
+          <i data-lucide="settings" class="w-3.5 h-3.5 text-zinc-400"></i>
+          <span>LLM Settings</span>
+        </button>
+        <a href="/docs" target="_blank" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium border border-zinc-700 transition flex items-center gap-1">
+          <i data-lucide="code" class="w-3.5 h-3.5"></i>
+          <span>API Docs</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
+
+    <!-- Hero & Unified Search Bar -->
+    <div class="text-center pt-2 pb-4">
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">Ask your data anything.</h2>
+      <p class="text-zinc-400 text-sm mt-1">Autonomous multi-agent data analyst: SQL synthesis, root-cause diagnostics, and econometric forecasting.</p>
+    </div>
+
+    <!-- Search Input Form -->
+    <div class="relative w-full">
+      <form id="analyze-form" onsubmit="handleAnalyze(event)" class="relative flex items-center">
+        <div class="absolute left-4 text-zinc-400">
+          <i data-lucide="search" class="w-5 h-5"></i>
+        </div>
+        <input
+          type="text"
+          id="query-input"
+          placeholder="e.g. top selling product in olist, why did revenue drop in Q3?, sales by region..."
+          class="w-full bg-[#18181b] border border-zinc-700 hover:border-zinc-600 focus:border-blue-500 rounded-2xl py-4 pl-12 pr-32 text-base text-zinc-100 placeholder-zinc-500 shadow-xl focus:outline-none transition"
+          required
+        />
+        <button
+          type="submit"
+          id="submit-btn"
+          class="absolute right-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-medium rounded-xl text-sm transition shadow-lg shadow-blue-600/25 flex items-center gap-1.5"
+        >
+          <span>Analyze</span>
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+      <!-- Quick Suggestion Chips -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs">
+        <span class="text-zinc-500 font-medium">Try asking:</span>
+        <button onclick="setQuery('top selling product in olist')" class="px-2.5 py-1 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 transition">
+          🛒 Top selling product in olist
+        </button>
+        <button onclick="setQuery('Why did revenue drop in Q3?')" class="px-2.5 py-1 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 transition">
+          📉 Why did revenue drop in Q3?
+        </button>
+        <button onclick="setQuery('Top 3 categories by revenue in Q3 2024')" class="px-2.5 py-1 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 transition">
+          📊 Top 3 categories by revenue
+        </button>
+        <button onclick="setQuery('Revenue by region and customer type for 2024')" class="px-2.5 py-1 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 transition">
+          📍 Revenue by region
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading-state" class="hidden flex-col items-center justify-center py-16 text-center">
+      <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-zinc-200 font-medium text-sm">Agents analyzing data...</p>
+      <p id="loading-subtext" class="text-zinc-500 text-xs mt-1">Planning SQL query & inspecting DuckDB tables</p>
+    </div>
+
+    <!-- Error Callout -->
+    <div id="error-card" class="hidden p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-sm">
+      <div class="flex items-center gap-2 font-semibold">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400"></i>
+        <span>Analysis Error</span>
+      </div>
+      <p id="error-message" class="mt-1 text-xs text-red-200"></p>
+    </div>
+
+    <!-- Result Container -->
+    <div id="result-container" class="hidden flex-col gap-6">
+
+      <!-- Executive Header / Answer Card -->
+      <div class="glass-card rounded-2xl p-6 border border-zinc-800">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span id="result-type-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                SQL Result
+              </span>
+              <span id="confidence-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-semibold"></span>
+              <span id="timing-badge" class="text-xs text-zinc-500"></span>
+            </div>
+            <h3 id="result-title" class="text-lg font-bold text-white">Analysis Findings</h3>
+          </div>
+          <div class="flex items-center gap-2" id="action-buttons">
+            <button onclick="downloadCSV()" id="csv-download-btn" class="hidden px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 transition flex items-center gap-1">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Export CSV</span>
+            </button>
+            <button onclick="downloadReport()" id="report-download-btn" class="hidden px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 transition flex items-center gap-1">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span>Download Report</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Narrative Output -->
+        <div id="narrative-content" class="mt-4 text-sm text-zinc-300 leading-relaxed space-y-2 border-t border-zinc-800/80 pt-4"></div>
+
+        <!-- Generated SQL with Copy Button -->
+        <div id="sql-block" class="hidden mt-4 pt-4 border-t border-zinc-800">
+          <div class="flex items-center justify-between text-xs text-zinc-400 mb-1.5">
+            <span class="font-mono text-zinc-400">Deterministic SQL:</span>
+            <button onclick="copySQL()" class="text-blue-400 hover:text-blue-300 flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              <span id="copy-text">Copy SQL</span>
+            </button>
+          </div>
+          <pre class="bg-black/60 p-3 rounded-xl border border-zinc-800 overflow-x-auto text-xs text-blue-300 font-mono"><code id="sql-code"></code></pre>
+        </div>
+      </div>
+
+      <!-- Chart Container -->
+      <div id="chart-card" class="hidden glass-card rounded-2xl p-5 border border-zinc-800">
+        <h4 id="chart-title" class="text-sm font-semibold text-zinc-300 mb-3">Visualization</h4>
+        <div id="plotly-chart" class="w-full h-80"></div>
+      </div>
+
+      <!-- Data Table Card -->
+      <div id="table-card" class="hidden glass-card rounded-2xl p-5 border border-zinc-800">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+            <span>Result Dataset</span>
+            <span id="table-row-count" class="text-xs text-zinc-500 font-normal"></span>
+          </h4>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-zinc-800">
+          <table id="data-table" class="w-full text-left text-xs text-zinc-300">
+            <thead class="bg-zinc-900 text-zinc-400 uppercase tracking-wider text-[11px] border-b border-zinc-800" id="table-head"></thead>
+            <tbody class="divide-y divide-zinc-800" id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Verification Checks (for investigations) -->
+      <div id="checks-card" class="hidden glass-card rounded-2xl p-5 border border-zinc-800">
+        <h4 class="text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+          <span>Critic Verification Checks</span>
+        </h4>
+        <div id="checks-list" class="space-y-2 text-xs"></div>
+      </div>
+
+      <!-- Trace Details -->
+      <details id="trace-details" class="hidden glass-card rounded-2xl p-4 border border-zinc-800">
+        <summary class="text-xs font-semibold text-zinc-400 cursor-pointer hover:text-zinc-200">
+          🧠 Inspect Agent Execution Trace
+        </summary>
+        <div id="trace-list" class="mt-3 space-y-2 text-xs font-mono border-t border-zinc-800 pt-3"></div>
+      </details>
+
+    </div>
+  </main>
+
+  <!-- Database & Tables Drawer -->
+  <div id="table-drawer" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex justify-end">
+    <div class="bg-zinc-900 border-l border-zinc-800 w-full max-w-md h-full p-6 flex flex-col gap-5 overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="database" class="w-5 h-5 text-blue-400"></i>
+          <h3 class="text-base font-bold text-white">Database Tables</h3>
+        </div>
+        <button onclick="closeTableDrawer()" class="text-zinc-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Upload Custom CSV -->
+      <div class="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Upload Custom CSV</h4>
+        <input type="file" id="csv-file-input" accept=".csv" class="text-xs text-zinc-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer w-full" />
+        <input type="text" id="csv-table-name" placeholder="Optional table name (e.g. sales)" class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200" />
+        <button onclick="uploadCSVFile()" class="mt-2 w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition">
+          Load into DuckDB
+        </button>
+        <p id="upload-status" class="text-xs text-emerald-400 mt-2 hidden"></p>
+      </div>
+
+      <!-- Loaded Tables List -->
+      <div class="flex-1">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Active Tables & Views</h4>
+        <div id="tables-list" class="space-y-2 text-xs">
+          <div class="text-zinc-500">Loading tables...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="settings" class="w-5 h-5 text-blue-400"></i>
+          <span>LLM Provider Settings</span>
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-zinc-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-zinc-400 mb-1">Provider</label>
+          <select id="setting-provider" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-200">
+            <option value="offline">Offline (Zero cost / Deterministic rules)</option>
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="ollama">Ollama (Local)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1">API Key</label>
+          <input type="password" id="setting-api-key" placeholder="sk-..." class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-200" />
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1">Model Name (optional)</label>
+          <input type="text" id="setting-model" placeholder="e.g. gpt-4o-mini or claude-sonnet-5-5" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-200" />
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-zinc-800">
+        <button onclick="closeSettingsModal()" class="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200">Cancel</button>
+        <button onclick="saveSettings()" class="px-4 py-2 text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-sm">Save & Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    lucide.createIcons();
+    let currentTableData = null;
+    let currentInvestigation = null;
+
+    // Load initial health / mode
+    async function loadHealth() {
+      try {
+        const res = await fetch('/health');
+        const data = await res.json();
+        const modeBadge = document.getElementById('agent-mode-badge');
+        modeBadge.textContent = `Mode: ${data.mode}`;
+        if (data.mode.includes('LLM')) {
+          modeBadge.className = 'text-xs text-emerald-400 font-medium';
+        } else {
+          modeBadge.className = 'text-xs text-amber-400 font-medium';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadHealth();
+
+    function setQuery(text) {
+      const input = document.getElementById('query-input');
+      input.value = text;
+      input.focus();
+    }
+
+    async function handleAnalyze(e) {
+      e.preventDefault();
+      const query = document.getElementById('query-input').value.trim();
+      if (!query) return;
+
+      // Show loader
+      document.getElementById('loading-state').classList.remove('hidden');
+      document.getElementById('loading-state').classList.add('flex');
+      document.getElementById('error-card').classList.add('hidden');
+      document.getElementById('result-container').classList.add('hidden');
+
+      const t0 = performance.now();
+
+      try {
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: query })
+        });
+
+        const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Failed to analyze query');
+        }
+
+        renderResult(data, elapsed, query);
+      } catch (err) {
+        document.getElementById('error-message').textContent = err.message;
+        document.getElementById('error-card').classList.remove('hidden');
+      } finally {
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('loading-state').classList.remove('flex');
+      }
+    }
+
+    function renderResult(data, elapsed, query) {
+      const container = document.getElementById('result-container');
+      container.classList.remove('hidden');
+      container.classList.add('flex');
+
+      document.getElementById('timing-badge').textContent = `${elapsed}s execution`;
+
+      const typeBadge = document.getElementById('result-type-badge');
+      const confBadge = document.getElementById('confidence-badge');
+      const title = document.getElementById('result-title');
+      const narrative = document.getElementById('narrative-content');
+      const sqlBlock = document.getElementById('sql-block');
+      const sqlCode = document.getElementById('sql-code');
+      const chartCard = document.getElementById('chart-card');
+      const tableCard = document.getElementById('table-card');
+      const checksCard = document.getElementById('checks-card');
+      const traceDetails = document.getElementById('trace-details');
+      const csvBtn = document.getElementById('csv-download-btn');
+      const reportBtn = document.getElementById('report-download-btn');
+
+      // Reset cards
+      chartCard.classList.add('hidden');
+      tableCard.classList.add('hidden');
+      checksCard.classList.add('hidden');
+      traceDetails.classList.add('hidden');
+      confBadge.classList.add('hidden');
+      csvBtn.classList.add('hidden');
+      reportBtn.classList.add('hidden');
+
+      if (data.type === 'ask') {
+        const r = data.result;
+        typeBadge.textContent = 'Text-to-SQL Result';
+        typeBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30';
+        title.textContent = query;
+        narrative.innerHTML = `<p>${r.answer || 'Query completed successfully.'}</p>`;
+
+        if (r.sql) {
+          sqlBlock.classList.remove('hidden');
+          sqlCode.textContent = r.sql;
+        } else {
+          sqlBlock.classList.add('hidden');
+        }
+
+        if (r.rows && r.rows.length > 0) {
+          currentTableData = r.rows;
+          renderTable(r.columns, r.rows);
+          renderAutoChart(r.columns, r.rows);
+          csvBtn.classList.remove('hidden');
+        }
+      } else if (data.type === 'investigation') {
+        const inv = data.result;
+        currentInvestigation = inv;
+        typeBadge.textContent = 'Root-Cause Investigation';
+        typeBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-400 border border-purple-500/30';
+        title.textContent = inv.question;
+
+        confBadge.classList.remove('hidden');
+        confBadge.textContent = `${inv.confidence.toUpperCase()} CONFIDENCE`;
+        if (inv.confidence === 'high') {
+          confBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        } else if (inv.confidence === 'medium') {
+          confBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30';
+        } else {
+          confBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30';
+        }
+
+        narrative.innerHTML = inv.narrative.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n- /g, '<br>• ');
+        reportBtn.classList.remove('hidden');
+
+        // Checks
+        if (inv.checks && inv.checks.length > 0) {
+          checksCard.classList.remove('hidden');
+          const list = document.getElementById('checks-list');
+          list.innerHTML = inv.checks.map(c => {
+            const icon = c.status === 'pass' ? '✅' : c.status === 'warn' ? '⚠️' : '❌';
+            return `<div class="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 flex items-start gap-2">
+              <span>${icon}</span>
+              <div><strong class="text-zinc-200">${c.name}</strong><p class="text-zinc-400">${c.detail}</p></div>
+            </div>`;
+          }).join('');
+        }
+
+        // Trace
+        if (inv.trace && inv.trace.length > 0) {
+          traceDetails.classList.remove('hidden');
+          const trc = document.getElementById('trace-list');
+          trc.innerHTML = inv.trace.map(t =>
+            `<div class="p-1.5 border-b border-zinc-800/60"><span class="text-zinc-500">${t.t}s</span> <strong class="text-blue-400">${t.agent}</strong>: ${t.action} ${t.detail ? '<span class="text-zinc-400">- ' + t.detail + '</span>' : ''}</div>`
+          ).join('');
+        }
+      }
+
+      lucide.createIcons();
+    }
+
+    function renderTable(columns, rows) {
+      const tableCard = document.getElementById('table-card');
+      const head = document.getElementById('table-head');
+      const body = document.getElementById('table-body');
+      const rowCount = document.getElementById('table-row-count');
+
+      tableCard.classList.remove('hidden');
+      rowCount.textContent = `(${rows.length} rows)`;
+
+      head.innerHTML = `<tr>${columns.map(c => `<th class="px-4 py-2.5 font-medium">${c}</th>`).join('')}</tr>`;
+      body.innerHTML = rows.slice(0, 30).map(r =>
+        `<tr class="hover:bg-zinc-800/40">${columns.map(c => `<td class="px-4 py-2 whitespace-nowrap text-zinc-300 font-mono">${r[c] !== null ? r[c] : '<span class="text-zinc-600">null</span>'}</td>`).join('')}</tr>`
+      ).join('');
+    }
+
+    function renderAutoChart(columns, rows) {
+      if (rows.length < 1) return;
+      const chartCard = document.getElementById('chart-card');
+      const keys = columns;
+
+      let catKey = null, numKey = null;
+      for (const k of keys) {
+        const val = rows[0][k];
+        if (typeof val === 'number') {
+          if (!numKey) numKey = k;
+        } else {
+          if (!catKey) catKey = k;
+        }
+      }
+
+      if (catKey && numKey && rows.length <= 40) {
+        chartCard.classList.remove('hidden');
+        document.getElementById('chart-title').textContent = `${numKey} by ${catKey}`;
+
+        const trace = {
+          x: rows.map(r => r[catKey]),
+          y: rows.map(r => r[numKey]),
+          type: 'bar',
+          marker: { color: '#3b82f6', opacity: 0.85 }
+        };
+
+        const layout = {
+          plot_bgcolor: '#18181b',
+          paper_bgcolor: '#18181b',
+          font: { color: '#a1a1aa', size: 12 },
+          margin: { l: 40, r: 20, t: 20, b: 60 },
+          xaxis: { gridcolor: '#27272a' },
+          yaxis: { gridcolor: '#27272a' }
+        };
+
+        Plotly.newPlot('plotly-chart', [trace], layout, { responsive: true, displayModeBar: false });
+      }
+    }
+
+    function copySQL() {
+      const code = document.getElementById('sql-code').textContent;
+      navigator.clipboard.writeText(code);
+      const text = document.getElementById('copy-text');
+      text.textContent = 'Copied!';
+      setTimeout(() => { text.textContent = 'Copy SQL'; }, 2000);
+    }
+
+    function downloadCSV() {
+      if (!currentTableData || currentTableData.length === 0) return;
+      const cols = Object.keys(currentTableData[0]);
+      let csv = cols.join(',') + '\n';
+      currentTableData.forEach(r => {
+        csv += cols.map(c => JSON.stringify(r[c] ?? '')).join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'analyst_query_result.csv';
+      a.click();
+    }
+
+    async function downloadReport() {
+      if (!currentInvestigation) return;
+      try {
+        const res = await fetch('/investigate/report?format=html', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: currentInvestigation.question })
+        });
+        const data = await res.json();
+        const blob = new Blob([data.content], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'investigation_report.html';
+        a.click();
+      } catch (e) {
+        alert('Could not download report: ' + e);
+      }
+    }
+
+    // Table Drawer
+    async function openTableDrawer() {
+      document.getElementById('table-drawer').classList.remove('hidden');
+      try {
+        const res = await fetch('/tables');
+        const data = await res.json();
+        const list = document.getElementById('tables-list');
+        list.innerHTML = data.tables.map(t =>
+          `<div class="p-2.5 rounded-lg border border-zinc-800 bg-zinc-950 flex items-center justify-between">
+            <div>
+              <span class="font-mono text-zinc-200 font-semibold">${t.table_name}</span>
+              <span class="text-[10px] text-zinc-500 ml-1.5 uppercase">${t.table_type}</span>
+            </div>
+            <span class="font-mono text-zinc-400">${t.row_count !== null ? Number(t.row_count).toLocaleString() + ' rows' : ''}</span>
+          </div>`
+        ).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function closeTableDrawer() {
+      document.getElementById('table-drawer').classList.add('hidden');
+    }
+
+    async function uploadCSVFile() {
+      const fileInput = document.getElementById('csv-file-input');
+      const nameInput = document.getElementById('csv-table-name');
+      const status = document.getElementById('upload-status');
+
+      if (!fileInput.files[0]) {
+        alert('Please choose a CSV file first');
+        return;
+      }
+
+      const form = new FormData();
+      form.append('file', fileInput.files[0]);
+      if (nameInput.value.trim()) {
+        form.append('table_name', nameInput.value.trim());
+      }
+
+      try {
+        status.classList.remove('hidden');
+        status.textContent = 'Uploading and indexing into DuckDB...';
+        const res = await fetch('/upload', { method: 'POST', body: form });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail);
+        status.textContent = `✅ Loaded ${data.table_name} (${data.rows.toLocaleString()} rows)!`;
+        openTableDrawer();
+      } catch (e) {
+        status.textContent = `❌ ${e.message}`;
+        status.className = 'text-xs text-red-400 mt-2';
+      }
+    }
+
+    // Settings Modal
+    function openSettingsModal() {
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+    function saveSettings() {
+      alert('Settings saved. You can also define API keys in your .env file.');
+      closeSettingsModal();
+    }
+  </script>
+</body>
+</html>

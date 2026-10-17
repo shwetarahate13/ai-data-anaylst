@@ -131,7 +131,26 @@ def parse_to_sql(question: str, regions: list[str], categories: list[str]) -> tu
     if group == "status" and view == "v_sales":
         return None, "status grouping needs order-level data"
 
-    cols = GROUPS.get(group, [])
+    is_olist = bool(re.search(r"\bolist\b", q))
+    if is_olist:
+        view = "olist"
+        if metric == "revenue":
+            agg = "ROUND(SUM(item_revenue), 2)"
+        elif metric == "orders":
+            agg = "COUNT(DISTINCT order_id)"
+        elif metric == "delivery":
+            agg = "ROUND(AVG(delivery_days_actual), 2)"
+        elif metric == "rating":
+            agg = "ROUND(AVG(review_score), 2)"
+        if group in ("category", "product", None):
+            cols = ["product_category"]
+        elif group in ("region", "state"):
+            cols = ["customer_state"]
+        else:
+            cols = GROUPS.get(group, [])
+    else:
+        cols = GROUPS.get(group, [])
+
     select = ", ".join(cols + [f"{agg} AS {alias}"])
     sql = f"SELECT {select} FROM {view}"
     if where:

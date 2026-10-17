@@ -21,8 +21,8 @@ COPY . .
 # Generate demo database on build
 RUN python -m analyst generate-data
 
-# Expose Streamlit (8501) and FastAPI (8000)
-EXPOSE 8501 8000
+# Expose FastAPI (8000)
+EXPOSE 8000
 
-# Default entrypoint runs Streamlit UI
-CMD ["streamlit", "run", "app/streamlit_app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+# Default entrypoint runs production FastAPI service (serving both UI and API)
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

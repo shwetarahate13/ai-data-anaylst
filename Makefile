@@ -24,8 +24,10 @@ app:
 api:
 	uvicorn api.main:app --reload --port 8000
 
+run: api
+
 docker:
-	docker build -t ai-data-analyst . && docker run --rm -p 8501:8501 --env-file .env ai-data-analyst
+	docker build -t ai-data-analyst . && docker run --rm -p 8000:8000 --env-file .env ai-data-analyst
 
 docker-compose:
 	docker compose up --build

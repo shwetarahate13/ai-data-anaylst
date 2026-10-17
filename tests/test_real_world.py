@@ -135,6 +135,20 @@ def test_api_real_world_endpoints(monkeypatch, agent):
     assert up_resp.json()["table_name"] == "test_upload"
     assert up_resp.json()["rows"] == 2
 
+    # Test UI endpoint
+    ui_resp = client.get("/ui")
+    assert ui_resp.status_code == 200
+    assert "Autonomous AI Data Analyst" in ui_resp.text
+
+    # Test smart /analyze routing
+    ask_analyze = client.post("/analyze", json={"question": "Top 3 categories by revenue in Q3 2024"})
+    assert ask_analyze.status_code == 200
+    assert ask_analyze.json()["type"] == "ask"
+
+    inv_analyze = client.post("/analyze", json={"question": "Why did revenue drop in Q3?"})
+    assert inv_analyze.status_code == 200
+    assert inv_analyze.json()["type"] == "investigation"
+
 
 def test_cli_tables_and_query(capsys):
     ret = cli_main(["tables"])

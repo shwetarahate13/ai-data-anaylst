@@ -4,16 +4,21 @@ from __future__ import annotations
 import io
 import re
 from functools import lru_cache
+from pathlib import Path
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 
 from analyst.agent import DataAnalystAgent, InvestigationError
 from analyst.bootstrap import ensure_database
 from analyst.config import get_settings
 from analyst.report import render_html, render_markdown
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+INDEX_HTML = STATIC_DIR / "index.html"
 
 app = FastAPI(
     title="Autonomous AI Data Analyst Agent",
@@ -52,16 +57,22 @@ class SafeSQLQuery(BaseModel):
 
 
 @app.get("/")
-def root():
+def root(request: Request):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and "application/json" not in accept and INDEX_HTML.exists():
+        return FileResponse(INDEX_HTML)
+
     agent = get_agent()
     return {
         "service": "Autonomous AI Data Analyst API",
         "version": "1.1.0",
         "mode": agent.mode,
         "docs_url": "/docs",
+        "ui_url": "/ui",
         "endpoints": [
             "/health",
             "/tables",
+            "/analyze",
             "/investigate",
             "/investigate/report",
             "/ask",
@@ -70,6 +81,47 @@ def root():
             "/upload",
         ],
     }
+
+
+@app.get("/ui", response_class=HTMLResponse)
+def serve_ui():
+    if INDEX_HTML.exists():
+        return FileResponse(INDEX_HTML)
+    raise HTTPException(status_code=404, detail="UI index.html not found.")
+
+
+@app.post("/analyze")
+def analyze(q: Question):
+    agent = get_agent()
+    text = q.question.strip()
+    low = text.lower()
+
+    # 1. What-If questions
+    if re.search(r"\bwhat[- ]if\b", low) or re.search(r"delivery.*(?:cut|fall|drop|fell|decreas|improv)", low):
+        pct_m = re.search(r"(\d+)%", low)
+        red = float(pct_m.group(1)) / 100.0 if pct_m else 0.20
+        reg = None
+        for r in ["west", "north", "south", "east", "central"]:
+            if r in low:
+                reg = r.capitalize()
+                break
+        try:
+            out = agent.whatif(reduction=red, region=reg)
+            return {"type": "whatif", "result": out}
+        except Exception:
+            pass
+
+    # 2. Root-cause anomaly questions (e.g. "why did revenue drop in Q3")
+    if re.search(r"\bwhy\b|root[- ]cause|diagnos|explain why", low) and re.search(r"drop|fall|fell|down|decreas|declin|loss|dip", low):
+        try:
+            inv = agent.investigate(text)
+            return {"type": "investigation", "result": inv.to_dict()}
+        except Exception:
+            pass
+
+    # 3. Ad-hoc / text-to-SQL data questions (e.g. "top selling product in olist")
+    res = agent.ask(text)
+    return {"type": "ask", "result": res.to_dict()}
 
 
 @app.get("/health")
