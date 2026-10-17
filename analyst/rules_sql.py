@@ -26,7 +26,7 @@ METRICS = {
 }
 GROUPS = {
     "region": ["region"], "category": ["category"], "month": ["month_start"], "quarter": ["year", "quarter"],
-    "year": ["year"], "customer_type": ["customer_type"], "status": ["status"],
+    "year": ["year"], "customer_type": ["customer_type"], "status": ["status"], "product": ["product_id", "category"],
 }
 
 
@@ -48,7 +48,7 @@ def _metric(q: str) -> str | None:
         return "customers"
     if re.search(r"\borders?\b", q):
         return "orders"
-    if re.search(r"revenue|sales|gmv|income|earn|turnover", q):
+    if re.search(r"revenue|sales|gmv|income|earn|turnover|selling", q):
         return "revenue"
     return None
 
@@ -63,10 +63,10 @@ def parse_to_sql(question: str, regions: list[str], categories: list[str]) -> tu
 
     # --- group by ---
     group = None
-    m = re.search(r"\b(?:by|per|each|every|across|for each|which)\s+(?:product\s+)?(region|categor\w+|month|quarter|year|customer type|status)", q)
+    m = re.search(r"\b(?:by|per|each|every|across|for each|which)\s+(?:product\s+)?(region|categor\w+|month|quarter|year|customer type|status|product\w*|item\w*)", q)
     if m:
         g = m.group(1)
-        group = "category" if g.startswith("categor") else "customer_type" if g == "customer type" else g
+        group = "category" if g.startswith("categor") else "product" if (g.startswith("product") or g.startswith("item")) else "customer_type" if g == "customer type" else g
     elif re.search(r"monthly", q):
         group = "month"
     elif re.search(r"quarterly", q):
@@ -76,10 +76,10 @@ def parse_to_sql(question: str, regions: list[str], categories: list[str]) -> tu
     elif re.search(r"new (vs|versus|and) repeat", q):
         group = "customer_type"
     if group is None:
-        m = re.search(r"\b(?:top|bottom|best|worst|highest|lowest)\s+\w*\s*(region|categor\w+|month|quarter|year)", q)
+        m = re.search(r"\b(?:top|bottom|best|worst|highest|lowest)\s+\w*\s*(region|categor\w+|month|quarter|year|product\w*|item\w*)", q)
         if m:
             g = m.group(1)
-            group = "category" if g.startswith("categor") else g
+            group = "category" if g.startswith("categor") else "product" if (g.startswith("product") or g.startswith("item")) else g
 
     # --- top / bottom ---
     order, limit = None, None

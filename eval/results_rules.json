@@ -2,9 +2,9 @@
   "mode": "rules",
   "model": null,
   "sql": {
-    "correct": 39,
+    "correct": 40,
     "total": 50,
-    "accuracy": 0.78,
+    "accuracy": 0.8,
     "by_difficulty": {
       "easy": {
         "correct": 9,
@@ -12,9 +12,9 @@
         "accuracy": 0.9
       },
       "medium": {
-        "correct": 28,
+        "correct": 29,
         "total": 30,
-        "accuracy": 0.9333333333333333
+        "accuracy": 0.9666666666666667
       },
       "hard": {
         "correct": 2,
@@ -141,7 +141,7 @@
         "agent_sql": "SELECT category, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 GROUP BY category ORDER BY revenue DESC",
         "gold_sql": "SELECT category, ROUND(SUM(revenue),2) FROM v_sales WHERE year = 2024 GROUP BY category",
         "error": null,
-        "seconds": 0.02
+        "seconds": 0.01
       },
       {
         "id": "q13",
@@ -181,7 +181,7 @@
         "agent_sql": "SELECT year, quarter, ROUND(SUM(revenue), 2) AS revenue FROM v_sales GROUP BY year, quarter ORDER BY year, quarter",
         "gold_sql": "SELECT year, quarter, ROUND(SUM(revenue),2) FROM v_sales GROUP BY year, quarter",
         "error": null,
-        "seconds": 0.02
+        "seconds": 0.04
       },
       {
         "id": "q17",
@@ -231,7 +231,7 @@
         "agent_sql": "SELECT category, SUM(quantity) AS units_sold FROM v_sales GROUP BY category ORDER BY units_sold DESC",
         "gold_sql": "SELECT category, SUM(quantity) FROM v_sales GROUP BY category",
         "error": null,
-        "seconds": 0.02
+        "seconds": 0.04
       },
       {
         "id": "q22",
@@ -337,11 +337,11 @@
         "id": "q32",
         "difficulty": "medium",
         "question": "Best selling product category in Q4 2023",
-        "correct": false,
-        "agent_sql": null,
+        "correct": true,
+        "agent_sql": "SELECT product_id, category, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2023 AND quarter = 'Q4' GROUP BY product_id, category ORDER BY revenue DESC LIMIT 1",
         "gold_sql": "SELECT category FROM v_sales WHERE year = 2023 AND quarter = 'Q4' GROUP BY category ORDER BY SUM(revenue) DESC LIMIT 1",
         "error": null,
-        "seconds": 0.0
+        "seconds": 0.01
       },
       {
         "id": "q33",
@@ -401,7 +401,7 @@
         "agent_sql": "SELECT ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2023 AND customer_type = 'new'",
         "gold_sql": "SELECT ROUND(SUM(revenue),2) FROM v_sales WHERE customer_type = 'new' AND year = 2023",
         "error": null,
-        "seconds": 0.01
+        "seconds": 0.05
       },
       {
         "id": "q39",
@@ -411,7 +411,7 @@
         "agent_sql": "SELECT ROUND(AVG(rating), 2) AS avg_rating FROM v_orders WHERE year = 2024 AND month = 7",
         "gold_sql": "SELECT ROUND(AVG(rating),2) FROM v_orders WHERE year = 2024 AND month = 7",
         "error": null,
-        "seconds": 0.01
+        "seconds": 0.02
       },
       {
         "id": "q40",
@@ -441,7 +441,7 @@
         "agent_sql": "SELECT region, ROUND(SUM(revenue), 2) AS revenue FROM v_sales WHERE year = 2024 AND quarter = 'Q2' GROUP BY region ORDER BY revenue DESC LIMIT 1",
         "gold_sql": "WITH r AS (SELECT region, SUM(CASE WHEN quarter='Q3' THEN revenue ELSE 0 END) - SUM(CASE WHEN quarter='Q2' THEN revenue ELSE 0 END) AS d FROM v_sales WHERE year = 2024 GROUP BY region) SELECT region FROM r ORDER BY d ASC LIMIT 1",
         "error": null,
-        "seconds": 0.01
+        "seconds": 0.02
       },
       {
         "id": "q43",
@@ -451,7 +451,7 @@
         "agent_sql": "SELECT COUNT(DISTINCT customer_id) AS customers FROM v_orders WHERE year = 2023",
         "gold_sql": "SELECT COUNT(*) FROM (SELECT customer_id FROM orders GROUP BY customer_id HAVING MIN(EXTRACT(year FROM order_date)) = 2023 AND MAX(EXTRACT(year FROM order_date)) = 2024 AND COUNT(DISTINCT EXTRACT(year FROM order_date)) = 2)",
         "error": null,
-        "seconds": 0.01
+        "seconds": 0.02
       },
       {
         "id": "q44",
@@ -461,7 +461,7 @@
         "agent_sql": "SELECT COUNT(*) AS orders FROM v_orders",
         "gold_sql": "SELECT ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT customer_id), 2) FROM orders",
         "error": null,
-        "seconds": 0.01
+        "seconds": 0.02
       },
       {
         "id": "q45",
